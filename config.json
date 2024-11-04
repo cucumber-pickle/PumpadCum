@@ -1,0 +1,4 @@
+{
+    "account_delay": [1, 3],
+    "cycle_delay": [144000, 288000]
+}
