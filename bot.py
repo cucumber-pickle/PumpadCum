@@ -121,7 +121,7 @@ class Pumpad:
         if response.status_code == 200:
             self.log(Fore.GREEN + f'Checkin successful!')
         else:
-            self.log(Fore.RED + f'Already checkin today')
+            self.log(Fore.RED + f'Failed checkin or Already checkin today')
 
     def set_proxy(self, proxy):
         self.scraper.proxies = {
@@ -163,12 +163,6 @@ class Pumpad:
                     f"{Fore.WHITE + Style.BRIGHT} {user['user_name']} {Style.RESET_ALL}"
                     f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
                 )
-
-            #Дейлик ежедневный
-            self.checkin(query)
-
-            self.raffle(query)
-
 
             missions = self.get_missions(query)
             if missions['mission_list'] is not None and 'mission_list' in missions:
@@ -260,6 +254,13 @@ class Pumpad:
                     self.log(f"{Fore.YELLOW + Style.BRIGHT}[ You Don't Have Enough Draw Count ]{Style.RESET_ALL}")
             else:
                 self.log(f"{Fore.RED + Style.BRIGHT}[ Data Get Lottery Is None ]{Style.RESET_ALL}")
+
+            # Дейлик ежедневный
+            self.checkin(query)
+            try:
+                self.raffle(query)
+            except Exception as e:
+                self.log(e)
 
         except RequestException as e:
             self.log(
