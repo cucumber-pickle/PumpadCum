@@ -23,6 +23,17 @@ class Pumpad:
             flush=True
         )
 
+    def set_proxy(self, proxy):
+        self.scraper.proxies = {
+            "http": proxy,
+            "https": proxy,
+        }
+        if '@' in proxy:
+            host_port = proxy.split('@')[-1]
+        else:
+            host_port = proxy.split('//')[-1]
+        return host_port
+
     def welcome(self):
         banner = f"""{Fore.GREEN}
  ██████  ██    ██   ██████  ██    ██  ███    ███  ██████   ███████  ██████  
@@ -36,26 +47,23 @@ class Pumpad:
         print(Fore.RED + f" FREE TO USE = Join us on {Fore.GREEN}t.me/cucumber_scripts")
         print(Fore.YELLOW + f" before start please '{Fore.GREEN}git pull{Fore.YELLOW}' to update bot")
         print(f"{Fore.WHITE}~" * 60)
-
     def format_seconds(self, seconds):
         hours, remainder = divmod(seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
-        
+
     def user_information(self, query: str):
         url = 'https://tg.pumpad.io/referral/api/v1/tg/user/information'
-
         self.headers.update({
             'Authorization': f'tma {query}'
         })
 
         response = self.scraper.get(url, headers=self.headers)
-        result = response.json()
         if response.status_code == 200:
-            return result
+            return response.json()
         else:
             return None
-        
+
     def get_lottery(self, query: str):
         url = 'https://tg.pumpad.io/referral/api/v1/lottery'
         self.headers.update({
@@ -63,12 +71,11 @@ class Pumpad:
         })
 
         response = self.scraper.get(url, headers=self.headers)
-        result = response.json()
         if response.status_code == 200:
-            return result
+            return response.json()
         else:
             return None
-    
+
     def post_lottery(self, query: str):
         url = 'https://tg.pumpad.io/referral/api/v1/lottery'
         self.headers.update({
@@ -76,12 +83,59 @@ class Pumpad:
         })
 
         response = self.scraper.post(url, headers=self.headers)
-        result = response.json()
         if response.status_code == 200:
-            return result
+            return response.json()
         else:
             return None
-    
+
+    def get_checkin(self, query: str):
+        url = 'https://tg.pumpad.io/referral/api/v1/tg/raffle/checkin'
+        self.headers.update({
+            'Authorization': f'tma {query}',
+        })
+
+        response = self.scraper.get(url, headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+
+    def post_checkin(self, query: str):
+        url = 'https://tg.pumpad.io/referral/api/v1/tg/raffle/checkin'
+        self.headers.update({
+            'Authorization': f'tma {query}',
+        })
+
+        response = self.scraper.post(url, headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+
+    def get_ticket(self, query: str):
+        url = 'https://tg.pumpad.io/referral/api/v1/tg/raffle/tickets'
+        self.headers.update({
+            'Authorization': f'tma {query}',
+        })
+
+        response = self.scraper.get(url, headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+
+    def post_raffle(self, query: str):
+        url = 'https://tg.pumpad.io/referral/api/v1/tg/raffle/bets'
+        self.headers.update({
+            'Authorization': f'tma {query}',
+        })
+
+        response = self.scraper.post(url, headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+
     def get_missions(self, query: str):
         url = 'https://tg.pumpad.io/referral/api/v1/tg/missions'
         self.headers.update({
@@ -89,12 +143,11 @@ class Pumpad:
         })
 
         response = self.scraper.get(url, headers=self.headers)
-        result = response.json()
         if response.status_code == 200:
-            return result
+            return response.json()
         else:
             return None
-    
+
     def post_missions(self, query: str, mission_id: int):
         url = f'https://tg.pumpad.io/referral/api/v1/tg/missions/check/{mission_id}'
         data = {}
@@ -103,64 +156,96 @@ class Pumpad:
         })
 
         response = self.scraper.post(url, headers=self.headers, json=data)
-        result = response.json()
         if response.status_code == 200:
-            return result
+            return response.json()
         else:
             return None
 
-    def checkin(self, query: str):
-        url = f'https://tg.pumpad.io/referral/api/v1/tg/raffle/checkin'
-        data = {}
-        self.headers.update({
-            'Authorization': f'tma {query}',
-        })
+    def process_query(self, query: str):
+        user = self.user_information(query)
+        if not user:
+            self.log(
+                f"{Fore.MAGENTA + Style.BRIGHT}[ Account{Style.RESET_ALL}"
+                f"{Fore.RED + Style.BRIGHT} Query ID Isn't Valid {Style.RESET_ALL}"
+                f"{Fore.MAGENTA + Style.BRIGHT}or{Style.RESET_ALL}"
+                f"{Fore.YELLOW + Style.BRIGHT} Blocked By Cloudflare {Style.RESET_ALL}"
+                f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
+                f"{Fore.WHITE + Style.BRIGHT} [ Restart Again ] {Style.RESET_ALL}"
+            )
+            return
 
-        response = self.scraper.post(url, headers=self.headers)
-
-        if response.status_code == 200:
-            self.log(Fore.GREEN + f'Checkin successful!')
-        else:
-            self.log(Fore.RED + f'Failed checkin or Already checkin today')
-
-    def set_proxy(self, proxy):
-        self.scraper.proxies = {
-            "http": proxy,
-            "https": proxy,
-        }
-        if '@' in proxy:
-            host_port = proxy.split('@')[-1]
-        else:
-            host_port = proxy.split('//')[-1]
-        return host_port
-
-    def raffle(self, query: str):
-        url = f'https://tg.pumpad.io/referral/api/v1/tg/raffle/bets'
-        data = {}
-        self.headers.update({
-            'Authorization': f'tma {query}',
-        })
-
-        remain_count = 1
-
-        while remain_count > 0:
-
-            response = self.scraper.post(url, headers=self.headers)
-            remain_count = response.json().get('remain_count')
-            self.log(Fore.YELLOW + f"You have {Fore.WHITE}{remain_count} {Fore.YELLOW}remain count tickets")
+        if user:
+            self.log(
+                f"{Fore.MAGENTA + Style.BRIGHT}[ Account{Style.RESET_ALL}"
+                f"{Fore.WHITE + Style.BRIGHT} {user['user_name']} {Style.RESET_ALL}"
+                f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
+            )
             time.sleep(1)
 
-        url = 'https://tg.pumpad.io/referral/api/v1/tg/raffle/numbers?raffle_id=8'
-        response = self.scraper.get(url, headers=self.headers)
-        self.log(Fore.GREEN + f"You have total {Fore.WHITE}{len(response.json())} {Fore.GREEN}tickets")
-
-    def process_query(self, query: str):
-        try:
-            user = self.user_information(query)
-            if user:
+            check_in = self.get_checkin(query)
+            if check_in and not check_in['is_check_in']:
+                claim = self.post_checkin(query)
+                if claim and claim['raffle_count']:
+                    self.log(
+                        f"{Fore.MAGENTA + Style.BRIGHT}[ Check-In{Style.RESET_ALL}"
+                        f"{Fore.WHITE + Style.BRIGHT} Day {check_in['consecutive_days'] + 1} {Style.RESET_ALL}"
+                        f"{Fore.GREEN + Style.BRIGHT}Is Claimed{Style.RESET_ALL}"
+                        f"{Fore.MAGENTA + Style.BRIGHT} ] [ Reward{Style.RESET_ALL}"
+                        f"{Fore.WHITE + Style.BRIGHT} {claim['raffle_count']} Raffle Ticket {Style.RESET_ALL}"
+                        f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
+                    )
+                else:
+                    self.log(
+                        f"{Fore.MAGENTA + Style.BRIGHT}[ Check-In{Style.RESET_ALL}"
+                        f"{Fore.WHITE + Style.BRIGHT} Day {check_in['consecutive_days'] + 1} {Style.RESET_ALL}"
+                        f"{Fore.RED + Style.BRIGHT}Isn't Claimed{Style.RESET_ALL}"
+                        f"{Fore.MAGENTA + Style.BRIGHT} ]{Style.RESET_ALL}"
+                    )
+            else:
                 self.log(
-                    f"{Fore.MAGENTA + Style.BRIGHT}[ Account{Style.RESET_ALL}"
-                    f"{Fore.WHITE + Style.BRIGHT} {user['user_name']} {Style.RESET_ALL}"
+                    f"{Fore.MAGENTA + Style.BRIGHT}[ Check-In{Style.RESET_ALL}"
+                    f"{Fore.WHITE + Style.BRIGHT} Day {check_in['consecutive_days']} {Style.RESET_ALL}"
+                    f"{Fore.YELLOW + Style.BRIGHT}Is Already Claimed{Style.RESET_ALL}"
+                    f"{Fore.MAGENTA + Style.BRIGHT} ]{Style.RESET_ALL}"
+                )
+            time.sleep(1)
+
+            ticekt = self.get_ticket(query)
+            if ticekt and ticekt['number_of_tickets'] > 0:
+                count = ticekt['number_of_tickets']
+
+                while count > 0:
+                    raffle = self.post_raffle(query)
+                    if raffle and raffle['number']:
+                        count = raffle['remain_count']
+
+                        self.log(
+                            f"{Fore.MAGENTA + Style.BRIGHT}[ Raffle{Style.RESET_ALL}"
+                            f"{Fore.GREEN + Style.BRIGHT} Is Success {Style.RESET_ALL}"
+                            f"{Fore.MAGENTA + Style.BRIGHT}] [ Number{Style.RESET_ALL}"
+                            f"{Fore.WHITE + Style.BRIGHT} {raffle['number']} {Style.RESET_ALL}"
+                            f"{Fore.MAGENTA + Style.BRIGHT}] [ Ticket{Style.RESET_ALL}"
+                            f"{Fore.WHITE + Style.BRIGHT} {count} Left {Style.RESET_ALL}"
+                            f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
+                        )
+                    else:
+                        self.log(
+                            f"{Fore.MAGENTA + Style.BRIGHT}[ Raffle{Style.RESET_ALL}"
+                            f"{Fore.RED + Style.BRIGHT} Isn't Success {Style.RESET_ALL}"
+                            f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
+                        )
+                        break
+
+                if count == 0:
+                    self.log(
+                        f"{Fore.MAGENTA + Style.BRIGHT}[ Raffle{Style.RESET_ALL}"
+                        f"{Fore.YELLOW + Style.BRIGHT} No Ticket Remaining {Style.RESET_ALL}"
+                        f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
+                    )
+            else:
+                self.log(
+                    f"{Fore.MAGENTA + Style.BRIGHT}[ Raffle{Style.RESET_ALL}"
+                    f"{Fore.YELLOW + Style.BRIGHT} No Ticket Remaining {Style.RESET_ALL}"
                     f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
                 )
 
@@ -201,13 +286,14 @@ class Pumpad:
                             )
                     else:
                         self.log(
-                                f"{Fore.MAGENTA + Style.BRIGHT}[ Mission{Style.RESET_ALL}"
-                                f"{Fore.WHITE + Style.BRIGHT} {mission_name} {Style.RESET_ALL}"
-                                f"{Fore.YELLOW + Style.BRIGHT}Is Already Completed{Style.RESET_ALL}"
-                                f"{Fore.MAGENTA + Style.BRIGHT} ]{Style.RESET_ALL}"
-                            )
+                            f"{Fore.MAGENTA + Style.BRIGHT}[ Mission{Style.RESET_ALL}"
+                            f"{Fore.WHITE + Style.BRIGHT} {mission_name} {Style.RESET_ALL}"
+                            f"{Fore.YELLOW + Style.BRIGHT}Is Already Completed{Style.RESET_ALL}"
+                            f"{Fore.MAGENTA + Style.BRIGHT} ]{Style.RESET_ALL}"
+                        )
             else:
                 self.log(f"{Fore.GREEN + Style.BRIGHT}[ Mission Clear ]{Style.RESET_ALL}")
+            time.sleep(1)
 
             draw = self.post_lottery(query)
             if draw is not None:
@@ -254,19 +340,6 @@ class Pumpad:
                     self.log(f"{Fore.YELLOW + Style.BRIGHT}[ You Don't Have Enough Draw Count ]{Style.RESET_ALL}")
             else:
                 self.log(f"{Fore.RED + Style.BRIGHT}[ Data Get Lottery Is None ]{Style.RESET_ALL}")
-
-            # Дейлик ежедневный
-            self.checkin(query)
-            try:
-                self.raffle(query)
-            except Exception as e:
-                self.log(e)
-
-        except RequestException as e:
-            self.log(
-                f"{Fore.RED + Style.BRIGHT}[ Blocked By Cloudflare ]{Style.RESET_ALL}"
-                f"{Fore.WHITE + Style.BRIGHT}[ Try Run Again ]{Style.RESET_ALL}"
-            )
 
     def main(self):
         try:
